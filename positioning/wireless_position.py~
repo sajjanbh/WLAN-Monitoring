@@ -1,0 +1,10 @@
+#!/usr/bin/env python
+
+from Tkinter import *
+from wireless.wireless_scan import *
+from wireless.menu_function import *
+from gui.container import *
+
+class Position:
+	def __init__(self):
+		scan = scan_ap()

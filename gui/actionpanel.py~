@@ -1,0 +1,52 @@
+#!/usr/bin/env python
+
+try:
+	from Tkinter import *
+	import Pmw
+	from wireless.menu_functions import *
+except ImportError, e:
+	pass
+	
+class Panel(object):
+	def __init__(self, parent):
+		Pmw.initialise()
+		self.balloon = Pmw.Balloon(parent)
+		# Creating panel containing main actions' icons
+		panel = Frame(parent, background="white")
+		# Adding Start Scan button to panel
+		self.start_img = PhotoImage(file='gui/images/scan.gif')
+		start_btn = Button(panel, image=self.start_img, width=25, height=25, command=scan_ap)
+		start_btn.pack(side=LEFT, padx=2)
+		self.balloon.bind(start_btn, 'Start Scanning')
+		
+		# Adding Stop Scan button to panel
+		self.stop_img = PhotoImage(file='gui/images/stop.gif')
+		stop_btn = Button(panel, image=self.stop_img)
+		stop_btn.pack(side=LEFT, padx=2)
+		self.balloon.bind(stop_btn, 'Stop Scanning')
+		
+		# Adding Dump scan results button to panel
+		self.dump_img = PhotoImage(file='gui/images/dump.gif')
+		dump_btn = Button(panel, image=self.dump_img, width=25, height=25)
+		dump_btn.pack(side=LEFT, padx=2)
+		self.balloon.bind(dump_btn, 'Dump Scan Results')
+		
+		# Adding in-depth scanning of selected device/network button to panel
+		self.sniff_img = PhotoImage(file='gui/images/duck.gif')
+		sniff_btn = Button(panel, image=self.sniff_img, width=25, height=25)
+		sniff_btn.pack(side=LEFT, padx=2)
+		self.balloon.bind(sniff_btn, 'Sniff specific device or network in depth')
+		
+		# Adding button to choose wireless interface
+		choose_iface = Button(panel, text="Choose Interface", activeforeground="blue", command=getIface)
+		choose_iface.pack(side=LEFT, padx=20, pady=2)
+		self.balloon.bind(choose_iface, 'Click this button to view the \nlist of available interfaces \nand select one')
+		
+		# Adding scan filter area
+		filter_area = Frame(panel, highlightbackground="gray", highlightthickness=1)
+		filter_lbl = Label(filter_area, text="Filter:").pack(side=LEFT)
+		filter_entry = Entry(filter_area, width=30, borderwidth=0).pack(side=LEFT)
+		filter_area.pack(side=LEFT)
+		self.balloon.bind(filter_area, 'Enter the scan filter value here')
+		
+		panel.pack(anchor=W, fill=BOTH, expand=YES, ipadx=20)

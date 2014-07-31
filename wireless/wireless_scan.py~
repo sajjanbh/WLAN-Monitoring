@@ -1,0 +1,44 @@
+from scapy.all import *
+from gui.tabulate_scan_results import *
+
+class Scan:
+	def __init__(self, parent, iface):
+		self.pkt_count = 0
+		self.hidden_count = 0
+		self.ap_list = []
+		self.interface = iface
+		self.gui = Gui(parent)
+		
+	def start_scan(self):
+		sniff(lfilter = lambda x: (x.haslayer(Dot11Beacon) or x.haslayer(Dot11ProbeResp)), iface=self.interface, prn=lambda x:self.PacketHandler(x))
+		
+	def PacketHandler(self, pkt):
+		#channel = int(ord(pkt[3].info))
+		station_mgmt_types = (0,2,4)
+		if pkt.haslayer(Dot11):
+			if pkt.type == 0 and pkt.subtype == 8:
+				if pkt.addr2 not in self.ap_list :
+					self.ap_list.append(pkt.addr2)
+					self.pkt_count += 1
+					if pkt.info == "__________":
+						self.hidden_count += 1
+						pkt.info = "Hidden_%d" % self.hidden_count
+					print "AP Found : %s with SSID: %s" % (pkt.addr2, pkt.info)
+					
+					self.gui.add_row(self.pkt_count, "AP", pkt.addr2, pkt.info)
+			elif pkt.type == 0 and pkt.subtype in station_mgmt_types:
+				if pkt.addr2 not in self.ap_list:
+					self.ap_list.append(pkt.addr2)
+					self.pkt_count += 1
+					print "Client found: %s " % pkt.addr2
+					self.gui.add_row(self.pkt_count, "Client", pkt.addr2, pkt.info)
+					
+	def getApList(self):
+		return self.ap_list
+
+"""					
+	def TurnMonitorOn(self, interface):
+		os.system("sudo ifconfig %s down" % interface)
+		os.system("sudo iwconfig %s mode monitor" % interface)
+		os.system("sudo ifconfig %s up" % interface)
+"""

@@ -1,0 +1,60 @@
+#!/usr/bin/env python
+
+from scapy.all import *
+import argparse
+from gui.tabulate_scan_results import *
+from multiprocessing import Process
+import signal
+import scapy_ex
+
+def add_network(pkt, known_networks):
+	essid = pkt[Dot11Elt].info if "\x00" not in pkt[Dot11Elt].info and pkt[Dot11Elt].info != '' else 'Hidden SSID'
+	bssid = pkt[Dot11].addr3
+	channel = int(ord(pkt[Dot11Elt:3].info))
+	signal = str(pkt[RadioTap].dBm_AntSignal) + " dBm"
+	if bssid not in known_networks:
+		known_networks[bssid] = (essid, channel)
+		print "{0:3}\t{1:24}\t{2:24}\t{3:8}".format(channel, essid, bssid, signal)
+		gui.add_row(channel, signal, bssid, essid)
+		#pkt.show()
+
+def channel_hopper(iface):
+	while True:
+		try:
+			channel = random.randrange(1,13)
+			os.system("sudo iwconfig %s channel %d" % (iface, channel))
+			time.sleep(1)
+		except KeyboardInterrupt:
+			break
+
+def stop_channel_hop(signal, frame):
+	# set the stop_sniff variable to True to stop the sniffer
+	global stop_sniff
+	stop_sniff = True
+	hop_channel.terminate()
+	hop_channel.join()
+	
+def keep_sniffing(pkt):
+	return stop_sniff
+
+"""
+if __name__ == '__main__':
+	parser = argparse.ArgumentParser(description='Wireless Scanning Tool')
+	parser.add_argument('-i', '--interface', dest='interface', type=str, required=True, help='Wireless interface to use for sniffing')
+	args = parser.parse_args()	
+
+	conf.iface = args.interface
+	"""
+def start_scan(parent, iface):
+	gui = Gui(parent)
+	conf.iface=iface
+	networks = {}
+	stop_sniff = False
+
+	hop_channel = Process(target = channel_hopper, args=(iface,))
+	hop_channel.start()
+	signal.signal(signal.SIGINT, stop_channel_hop)
+
+	#print "\t{0:5}\t\t{1:30}\t{2:30}".format("Channel", "ESSID", "BSSID")
+	sniff( lfilter = lambda x: (x.haslayer(Dot11Beacon) or x.haslayer(Dot11ProbeResp)), stop_filter=keep_sniffing, prn=lambda x: add_network(x,networks) )
+	signal.signal(signal.SIGINT, signal.SIG_DFL)

@@ -1,0 +1,80 @@
+from Tkinter import *
+import Pmw
+
+class DisplayBox:
+
+    def __init__(self, parent):
+        self.myParent = parent
+        Pmw.initialise()
+        balloon = Pmw.Balloon(parent)
+        
+        # Creating panel containing main actions' icons
+        panel = Frame(parent, background="white", highlightbackground="gray", highlightthickness=2)
+        # Adding Start Scan button to panel
+        self.start_img = PhotoImage(file='gui/images/scan.gif')
+        start_btn = Button(panel, image=self.start_img, width=25, height=25)
+        start_btn.pack(side=LEFT, padx=2)
+        balloon.bind(start_btn, 'Start Scanning')
+        
+        # Adding Stop Scan button to panel
+        self.stop_img = PhotoImage(file='gui/images/stop.gif')
+        stop_btn = Button(panel, image=self.stop_img)
+        stop_btn.pack(side=LEFT, padx=2)
+        balloon.bind(stop_btn, 'Stop Scanning')
+        
+        # Adding Dump scan results button to panel
+        self.dump_img = PhotoImage(file='gui/images/dump.gif')
+        dump_btn = Button(panel, image=self.dump_img, width=25, height=25)
+        dump_btn.pack(side=LEFT, padx=2)
+        balloon.bind(dump_btn, 'Dump Scan Results')
+        
+        # Adding in-depth scanning of selected device/network button to panel
+        self.sniff_img = PhotoImage(file='gui/images/duck.gif')
+        sniff_btn = Button(panel, image=self.sniff_img, width=25, height=25)
+        sniff_btn.pack(side=LEFT, padx=2)
+        balloon.bind(sniff_btn, 'Sniff specific device or network in depth')
+        
+        panel.pack(anchor=W, fill=BOTH, expand=YES, ipadx=20)
+              
+        self.container = Frame(parent, width=800, height=670, background="white")
+        self.container.configure(highlightbackground="black", highlightthickness=5)
+        self.container.pack(fill=BOTH, expand=YES, side=LEFT)
+                       
+        self.canvas = Canvas(self.container, width=800, height=670, background='white')
+        self.canvas["scrollregion"] = (0,0,800,800)
+        self.canvas.pack()
+        self.scrollY = Scrollbar(parent, orient=VERTICAL, command=self.canvas.yview)
+        self.img1 = PhotoImage(file='gui/images/WAP.gif', height=50, width=50)
+        #self.draw_circular_lines()
+        self.draw_oval_gradient()
+        self.canvas.create_image(400,400, image=self.img1, anchor=CENTER)
+        self.scrollY.pack(fill=Y, expand=YES, anchor=E)
+        self.canvas["yscrollcommand"] = self.scrollY.set
+
+##    def draw_circular_lines(self):
+##        self.color = ""
+##        self.canvas.create_oval(40,40,760,760, outline="red", fill=_draw_gradient("red", "yellow"))
+##        self.canvas.create_oval(120,120,680,680, outline="orange", fill='orange')
+##        self.canvas.create_oval(240,240,560,560, outline="green" fill='green')
+##        self.canvas.create_oval(350,350,450,450, outline="white", fill='white')
+
+    def draw_oval_gradient(self):
+        x = 30
+        y = 770
+        limit = 399
+        (r1,g1,b1) = (65535,41000,2000)
+        (r2,g2,b2) = (10000,65535,1000)
+
+        r_ratio = float(r2-r1) / limit
+        g_ratio = float(g2-g1) / limit
+        b_ratio = float(b2-b1) / limit
+
+        for i in range(limit):
+            x += 1
+            y -= 1
+            nr = int(r1 + (r_ratio * i))
+            ng = int(g1 + (g_ratio * i))
+            nb = int(b1 + (b_ratio * i))
+            color = "#%4.4x%4.4x%4.4x" % (nr,ng,nb)
+            self.canvas.create_oval(x,x,y,y, outline=color, fill=color)
+        self.canvas.create_oval(365,365,435,435, outline="white", fill="white")
